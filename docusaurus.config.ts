@@ -49,10 +49,15 @@ const config: Config = {
       respectPrefersColorScheme: true,
     },
     navbar: {
-      title: 'Greyhaven',
+      title: '',
       logo: {
-        alt: 'Greyhaven Logo',
-        src: 'img/logo.svg',
+        alt: 'Greyhaven',
+        src: 'img/greyheaven-logo.svg',
+        srcDark: 'img/greyheaven-logo-dark.svg',
+        href: 'https://greyhaven.co',
+        target: '_self',
+        width: 160,
+        height: 40,
       },
       items: [
         {
