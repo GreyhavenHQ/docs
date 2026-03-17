@@ -1,0 +1,62 @@
+/**
+ * Greyhaven Docs — global CSS
+ * Built on Docusaurus / Infima
+ */
+
+:root {
+  /* Grey-toned primary palette */
+  --ifm-color-primary: #4a5568;
+  --ifm-color-primary-dark: #3d4a5c;
+  --ifm-color-primary-darker: #374356;
+  --ifm-color-primary-darkest: #2d3748;
+  --ifm-color-primary-light: #5a6478;
+  --ifm-color-primary-lighter: #606b82;
+  --ifm-color-primary-lightest: #718096;
+  --ifm-code-font-size: 94%;
+  --docusaurus-highlighted-code-line-bg: rgba(0, 0, 0, 0.08);
+}
+
+[data-theme='dark'] {
+  --ifm-color-primary: #a0aec0;
+  --ifm-color-primary-dark: #90a0b4;
+  --ifm-color-primary-darker: #8898ac;
+  --ifm-color-primary-darkest: #718096;
+  --ifm-color-primary-light: #b0bece;
+  --ifm-color-primary-lighter: #b8c6d4;
+  --ifm-color-primary-lightest: #cbd5e0;
+  --docusaurus-highlighted-code-line-bg: rgba(255, 255, 255, 0.08);
+}
+
+/* Subtle navbar brand */
+.navbar__title {
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+/* Hero banner */
+.heroBanner {
+  padding: 4rem 0;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+
+@media screen and (max-width: 996px) {
+  .heroBanner {
+    padding: 2rem;
+  }
+}
+
+/* Product cards on homepage */
+.productCard {
+  border: 1px solid var(--ifm-color-emphasis-300);
+  border-radius: 8px;
+  padding: 1.5rem;
+  margin-bottom: 1rem;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.productCard:hover {
+  border-color: var(--ifm-color-primary);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
