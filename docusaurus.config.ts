@@ -11,8 +11,8 @@ const config: Config = {
     v4: true,
   },
 
-  url: 'https://greyhaven.co',
-  baseUrl: '/docs/',
+  url: 'https://docs.greywall.io',
+  baseUrl: '/',
 
   organizationName: 'GreyhavenHQ',
   projectName: 'greyhaven-docs',
