@@ -42,6 +42,8 @@ const config: Config = {
     ],
   ],
 
+  plugins: ['docusaurus-plugin-llms'],
+
   themeConfig: {
     image: 'img/greyhaven-social.jpg',
     colorMode: {

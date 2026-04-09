@@ -2,6 +2,10 @@
   "name": "greyhaven-docs",
   "version": "0.0.0",
   "private": true,
+  "resolutions": {
+    "**/webpackbar": "^5.0.2",
+    "webpackbar": "^5.0.2"
+  },
   "scripts": {
     "docusaurus": "docusaurus",
     "start": "docusaurus start",
