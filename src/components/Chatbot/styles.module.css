@@ -368,3 +368,45 @@
   border-radius: 0.25rem;
   color: var(--ifm-color-emphasis-600);
 }
+
+/* ==========================================================================
+   Mobile & Tablet Responsiveness
+   ========================================================================== */
+@media (max-width: 768px) {
+  /* Open Chatbot takes the whole screen */
+  .chatbotContainer:not(.minimized) {
+    bottom: 0;
+    right: 0;
+    width: 100vw;
+    height: 100vh;
+    height: 100dvh; /* use dynamic viewport height if supported */
+    max-width: 100vw;
+    max-height: 100vh;
+    max-height: 100dvh;
+    border-radius: 0;
+    border: none;
+    box-shadow: none;
+    z-index: 10000;
+  }
+
+  /* Keep the minimized button floating, but closer to the edge */
+  .chatbotContainer.minimized {
+    bottom: 1.25rem;
+    right: 1.25rem;
+  }
+
+  /* Prevent auto-zoom on input focus in iOS */
+  .textInput {
+    font-size: 16px;
+  }
+
+  /* Hide the desktop keyboard shortcut hint */
+  .shortcut {
+    display: none;
+  }
+
+  /* Hide the 'Expand' button since it's already full-screen */
+  .controlButton[aria-label="Expand"] {
+    display: none;
+  }
+}
