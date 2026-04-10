@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import clsx from 'clsx';
 import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import styles from './styles.module.css';
 
 // ── Config ──────────────────────────────────────────────────────────────────
@@ -322,7 +323,7 @@ export default function Chatbot() {
                 <SearchIcon /> Searching documentation…
               </div>
               <div className={styles.botContent}>
-                <ReactMarkdown>{msg.content}</ReactMarkdown>
+                <ReactMarkdown remarkPlugins={[remarkGfm]}>{msg.content}</ReactMarkdown>
               </div>
               <div className={styles.actions}>
                 <button 

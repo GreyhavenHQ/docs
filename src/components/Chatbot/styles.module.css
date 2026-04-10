@@ -193,6 +193,33 @@
   padding: 0;
 }
 
+/* Markdown Table Styles */
+.botContent table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 0.5rem;
+  margin-bottom: 0.75rem;
+  font-size: 0.85rem;
+  display: block;
+  overflow-x: auto;
+}
+
+.botContent th,
+.botContent td {
+  border: 1px solid var(--ifm-color-emphasis-300);
+  padding: 0.5rem;
+  text-align: left;
+}
+
+.botContent th {
+  background-color: var(--ifm-color-emphasis-100);
+  font-weight: 600;
+}
+
+[data-theme='dark'] .botContent th {
+  background-color: var(--ifm-color-emphasis-200);
+}
+
 .searchResultsList {
   list-style: none;
   padding: 0;
