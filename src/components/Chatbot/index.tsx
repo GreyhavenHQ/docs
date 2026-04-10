@@ -60,8 +60,8 @@ function checkRateLimit(): 'ok' | 'limit_reached' | 'cooldown' {
 }
 
 // ── Icons ────────────────────────────────────────────────────────────────────
-const SparklesIcon = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+const SparklesIcon = (props: React.SVGProps<SVGSVGElement>) => (
+  <svg xmlns="http://www.w3.org/2000/svg" width={props.width || "20"} height={props.height || "20"} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
     <path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z"/>
     <path d="M20 3v4"/><path d="M22 5h-4"/><path d="M4 17v2"/><path d="M5 18H3"/>
   </svg>
@@ -115,6 +115,9 @@ export default function Chatbot() {
   const [isLoading, setIsLoading] = useState(false);
   const [sessionId, setSessionId] = useState(generateSessionId);
   const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
+  const [hasOfferedSupport, setHasOfferedSupport] = useState(false);
+  const [dislikedIndexes, setDislikedIndexes] = useState<Set<number>>(new Set());
+  const [likedIndexes, setLikedIndexes] = useState<Set<number>>(new Set());
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   // Scroll to bottom on new messages
@@ -233,7 +236,38 @@ export default function Chatbot() {
   const handleCopy = (text: string, index: number) => {
     navigator.clipboard.writeText(text);
     setCopiedIndex(index);
-    setTimeout(() => setCopiedIndex(null), 1500);
+    setTimeout(() => setCopiedIndex(null), 2000);
+  };
+
+  const handleLike = (index: number) => {
+    setLikedIndexes((prev) => {
+      const newSet = new Set(prev);
+      newSet.add(index);
+      return newSet;
+    });
+  };
+
+  const handleDislike = (index: number) => {
+    // Optionally fire a webhook to record the negative feedback
+    setDislikedIndexes((prev) => {
+      const newSet = new Set(prev);
+      newSet.add(index);
+      return newSet;
+    });
+
+    // Only offer support once per session to avoid spamming
+    if (!hasOfferedSupport) {
+      setTimeout(() => {
+        setMessages((prev) => [
+          ...prev,
+          { 
+            role: 'bot', 
+            content: "I'm sorry this answer wasn't helpful! If you're still stuck, please [contact our support team](https://greyhaven.co/contact) or reach out so a human can step in to assist you."
+          }
+        ]);
+        setHasOfferedSupport(true);
+      }, 600); // slight delay makes it feel conversational
+    }
   };
 
   // ── Minimized button ───────────────────────────────────────────────────────
@@ -291,19 +325,36 @@ export default function Chatbot() {
                 <ReactMarkdown>{msg.content}</ReactMarkdown>
               </div>
               <div className={styles.actions}>
-                <button className={styles.actionBtn} title="Helpful">
-                  <ThumbsUpIcon />
+                <button 
+                  className={styles.actionBtn} 
+                  title={likedIndexes.has(i) ? "Liked!" : "Helpful"}
+                  onClick={() => handleLike(i)}
+                  style={likedIndexes.has(i) ? { color: 'var(--ifm-color-success)' } : {}}
+                >
+                  {likedIndexes.has(i) ? <SparklesIcon width="16" height="16" /> : <ThumbsUpIcon />}
                 </button>
-                <button className={styles.actionBtn} title="Not helpful">
+                <button 
+                  className={styles.actionBtn} 
+                  title={dislikedIndexes.has(i) ? "Feedback received" : "Not helpful"}
+                  onClick={() => handleDislike(i)}
+                  style={dislikedIndexes.has(i) ? { color: 'var(--ifm-color-danger)' } : {}}
+                >
                   <ThumbsDownIcon />
                 </button>
                 <button
                   className={styles.actionBtn}
                   title={copiedIndex === i ? 'Copied!' : 'Copy'}
                   onClick={() => handleCopy(msg.content, i)}
+                  style={copiedIndex === i ? { color: 'var(--ifm-color-success)' } : {}}
                 >
                   <CopyIcon />
                 </button>
+                
+                {copiedIndex === i && (
+                  <span style={{ fontSize: '0.8rem', color: 'var(--ifm-color-success)', alignSelf: 'center', marginLeft: '4px', fontWeight: 500 }}>
+                    Copied to clipboard! 📋
+                  </span>
+                )}
               </div>
             </div>
           )
