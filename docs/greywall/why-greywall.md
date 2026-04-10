@@ -1,8 +1,3 @@
----
-id: why-greywall
-title: Why Greywall?
----
-
 # Why Greywall?
 
 Greywall exists to reduce the blast radius of running commands you don't fully trust (or don't fully understand yet).
@@ -16,7 +11,7 @@ Common situations:
 
 Greywall is intentionally simple: it focuses on network allowlisting (by domain) and filesystem write restrictions (by path), wrapped in a pragmatic OS sandbox (macOS `sandbox-exec`, Linux `bubblewrap`).
 
-## What Problem Does It Solve?
+## What problem does it solve?
 
 Greywall helps you answer: "What can this command touch?"
 
@@ -26,7 +21,7 @@ Greywall helps you answer: "What can this command touch?"
 
 This is especially useful for supply-chain risk and "unknown repo" workflows where you want a safer default than "run it and hope".
 
-## When Greywall Is Useful Even If Tools Already Sandbox
+## When Greywall is useful even if tools already sandbox
 
 Some coding agents and platforms ship sandboxing (Seatbelt/Landlock/etc.). Greywall still provides value when you want:
 
@@ -35,11 +30,11 @@ Some coding agents and platforms ship sandboxing (Seatbelt/Landlock/etc.). Greyw
 - **Defense-in-depth**: wrap an agent (or its subprocesses) with an additional layer and clearer audit signals.
 - **Practical allowlisting**: start with default-deny egress and use `-m` to discover what domains a workflow actually needs.
 
-## Non-Goals
+## Non-goals
 
 Greywall is **not** a hardened containment boundary for actively malicious code.
 
 - It does **not** attempt to prevent resource exhaustion (CPU/RAM/disk), timing attacks, or kernel-level escapes.
 - Domain allowlisting is not content inspection: if you allow a domain, code can exfiltrate via that domain.
 
-For details, see [Security Model](./security-model).
+For details, see [Security Model](security-model.md).

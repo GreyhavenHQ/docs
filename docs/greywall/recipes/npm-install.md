@@ -1,8 +1,3 @@
----
-id: npm-install
-title: "Recipe: npm install"
----
-
 # Recipe: `npm install`
 
 Goal: allow npm to fetch packages, but block unexpected egress.

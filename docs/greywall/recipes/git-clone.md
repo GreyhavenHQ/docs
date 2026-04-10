@@ -1,8 +1,3 @@
----
-id: git-clone
-title: "Recipe: git clone"
----
-
 # Recipe: `git clone` / `git fetch`
 
 Goal: allow fetching code from a limited set of hosts.

@@ -1,8 +1,3 @@
----
-id: security-model
-title: Security Model
----
-
 # Security Model
 
 Greywall is intended as defense-in-depth for running semi-trusted commands with reduced side effects (package installs, build scripts, CI jobs, unfamiliar repos).
@@ -48,6 +43,10 @@ Localhost is separate from external traffic:
 - **denyRead** can block reads from specific paths even within allowed areas.
 - Greywall includes an internal list of always-protected targets (e.g. shell configs, git hooks, `.env` files) to reduce common persistence vectors.
 
+### D-Bus isolation (Linux)
+
+The D-Bus session bus is blocked inside the sandbox. Without this, a sandboxed process can use the host's GVFS daemon to read arbitrary files, access gnome-keyring passwords, or launch processes outside the sandbox. Greywall overlays `/run/user` with a tmpfs, blocking all user session sockets (D-Bus, Wayland, PipeWire, SSH agent, GPG agent). SSH/GPG agent sockets can be selectively re-added via `allowRead` if needed, though this grants the sandbox the ability to authenticate under your identity.
+
 ### Environment sanitization
 
 Greywall strips dangerous environment variables before passing them to sandboxed commands:
@@ -77,4 +76,4 @@ Greywall does not inspect request content. Access control is delegated to the ex
 
 Greywall is defense-in-depth for running semi-trusted code, not a strong isolation boundary against malware designed to escape sandboxes.
 
-For implementation details (how proxies/sandboxes/bridges work), see [Architecture](./architecture).
+For implementation details (how proxies/sandboxes/bridges work), see [`ARCHITECTURE.md`](../ARCHITECTURE.md).

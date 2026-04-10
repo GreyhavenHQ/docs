@@ -1,8 +1,3 @@
----
-id: ci
-title: "Recipe: CI Jobs"
----
-
 # Recipe: CI jobs
 
 Goal: make CI steps safer by default: minimal egress and controlled writes.

@@ -1,8 +1,3 @@
----
-id: library
-title: Go Library Usage
----
-
 # Library Usage (Go)
 
 Greywall can be used as a Go library to sandbox commands programmatically.

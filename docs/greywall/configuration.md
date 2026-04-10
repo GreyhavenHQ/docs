@@ -1,8 +1,3 @@
----
-id: configuration
-title: Configuration Reference
----
-
 # Configuration
 
 Greywall reads settings from `~/.config/greywall/greywall.json` by default (or `~/Library/Application Support/greywall/greywall.json` on macOS). Legacy `~/.greywall.json` is also supported. Pass `--settings ./greywall.json` to use a custom path. Config files support JSONC.
@@ -101,7 +96,8 @@ Greywall routes all network traffic through an external SOCKS5 proxy. Domain fil
 | `allowUnixSockets` | List of allowed Unix socket paths (macOS) |
 | `allowAllUnixSockets` | Allow all Unix sockets |
 | `allowLocalBinding` | Allow binding to local ports |
-| `allowLocalOutbound` | Allow outbound connections to localhost, e.g., local DBs (defaults to `allowLocalBinding` if not set) |
+| `allowLocalOutbound` | Allow outbound connections to localhost, e.g., local DBs (defaults to `allowLocalBinding` if not set; macOS only) |
+| `forwardPorts` | Host localhost ports to forward into the sandbox (Linux only; array of integers) |
 
 ## Filesystem Configuration
 
@@ -114,7 +110,7 @@ Greywall routes all network traffic through an external SOCKS5 proxy. Domain fil
 | `denyWrite` | Paths to deny writing (takes precedence over `allowWrite`) |
 | `allowGitConfig` | Allow writes to `.git/config` files |
 
-To opt out of deny-by-default reads, set `"defaultDenyRead": false`. Use `--learning` mode to automatically discover which paths a command needs. See [Learning Mode](./learning-mode).
+To opt out of deny-by-default reads, set `"defaultDenyRead": false`. Use `--learning` mode to automatically discover which paths a command needs. See [Learning Mode](learning.md).
 
 ## Command Configuration
 
@@ -253,6 +249,7 @@ SSH host patterns support wildcards anywhere:
 | Field | Description |
 |-------|-------------|
 | `allowPty` | Allow pseudo-terminal (PTY) allocation in the sandbox (for MacOS) |
+| `allowAudio` | Expose PulseAudio and PipeWire sockets inside the sandbox so commands can produce audio output (Linux only). Note: these sockets also allow microphone capture and, via PipeWire, camera/screen access. Disabled by default. |
 
 ## Importing from Claude Code
 
@@ -303,5 +300,5 @@ Global tool permissions (e.g., bare `Read`, `Write`, `Grep`) are skipped since g
 
 ## See Also
 
-- Config templates: [`./templates`](./templates)
-- Workflow guides: [`./recipes/`](./recipes/)
+- Config templates: [`docs/templates/`](docs/templates/)
+- Workflow guides: [`docs/recipes/`](docs/recipes/)

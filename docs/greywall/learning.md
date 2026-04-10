@@ -1,8 +1,3 @@
----
-id: learning-mode
-title: Learning Mode
----
-
 # Learning Mode
 
 Greywall uses a deny-by-default filesystem model: reads and writes are blocked unless explicitly allowed. Rather than manually figuring out which paths a command needs, learning mode traces the command's actual filesystem access and generates a config template automatically.

@@ -1,8 +1,3 @@
----
-id: templates
-title: Config Templates
----
-
 # Config Templates
 
 Greywall includes built-in config templates for common use cases. Templates are embedded in the binary, so you can use them directly without copying files.
@@ -22,7 +17,7 @@ greywall -t code -- claude
 greywall --list-templates
 ```
 
-You can also copy and customize templates from [`internal/templates/`](https://github.com/GreyhavenHQ/greywall/tree/main/internal/templates/).
+You can also copy and customize templates from [`internal/templates/`](/internal/templates/).
 
 ## Extending templates
 

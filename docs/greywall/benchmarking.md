@@ -1,8 +1,3 @@
----
-id: benchmarking
-title: Benchmarking
----
-
 # Benchmarking
 
 This document describes how to run, interpret, and compare sandbox performance benchmarks for Greywall.

@@ -1,8 +1,3 @@
----
-id: index
-title: Recipes
----
-
 # Recipes
 
 These are "cookbook" guides for common workflows. Most follow the same loop:
