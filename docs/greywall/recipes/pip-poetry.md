@@ -1,3 +1,8 @@
+---
+id: pip-poetry
+title: "Recipe: pip / poetry"
+---
+
 # Recipe: `pip` / `poetry`
 
 Goal: allow Python dependency fetching while keeping egress minimal.

@@ -1,3 +1,8 @@
+---
+id: learning-mode
+title: Learning Mode
+---
+
 # Learning Mode
 
 Greywall uses a deny-by-default filesystem model: reads and writes are blocked unless explicitly allowed. Rather than manually figuring out which paths a command needs, learning mode traces the command's actual filesystem access and generates a config template automatically.
@@ -16,9 +21,9 @@ Greywall uses a deny-by-default filesystem model: reads and writes are blocked u
 greywall --learning -- opencode
 
 # Step 2: Review what was generated
-greywall templates show opencode
+greywall profiles show opencode
 
-# Step 3: Run normally — template auto-loads
+# Step 3: Run normally — the profile auto-loads
 greywall -- opencode
 ```
 
@@ -44,46 +49,43 @@ When the command exits, greywall:
 
 **Security note:** The sandbox filesystem is relaxed during learning. Do not use `--learning` with untrusted code.
 
-## Managing templates
+## Managing profiles
 
-### List all learned templates
-
-```bash
-greywall templates list
-```
-
-Output:
-
-```
-Learned templates (~/.config/greywall/learned):
-
-  opencode
-  npm
-  cargo
-
-Show a template: greywall templates show <name>
-Use a template:  greywall --template <name> -- <command>
-```
-
-### Show a template
+### List all profiles
 
 ```bash
-greywall templates show opencode
+greywall profiles list
 ```
 
-This prints the full JSONC content of the template, including the generated comments.
+This lists both built-in profiles (shipped with greywall) and any learned profiles under `~/.config/greywall/learned`.
 
-### Use a specific template
+### Show a profile
 
 ```bash
-# Auto-load: greywall looks for a template matching the command name
+greywall profiles show opencode
+```
+
+This prints the full JSONC content of the profile, including the generated comments.
+
+### Edit a profile
+
+```bash
+greywall profiles edit opencode
+```
+
+Opens the profile in `$EDITOR` for direct modification.
+
+### Use a specific profile
+
+```bash
+# Auto-load: greywall looks for a profile matching the command name
 greywall -- opencode
 
-# Explicit: use a specific template regardless of command name
-greywall --template opencode -- ./my-custom-editor
+# Explicit: use a specific profile regardless of command name
+greywall --profile opencode -- ./my-custom-editor
 ```
 
-The `--template` flag takes priority over auto-detection. If the specified template doesn't exist, greywall exits with an error.
+The `--profile` flag takes priority over auto-detection. If the specified profile doesn't exist, greywall exits with an error.
 
 ## Template format
 
@@ -136,11 +138,11 @@ Key features of generated templates:
 # 1. Learn what the tool needs
 greywall --learning -- opencode
 
-# 2. Review the generated template
-greywall templates show opencode
+# 2. Review the generated profile
+greywall profiles show opencode
 
-# 3. Edit if needed (the file path is shown by greywall)
-# e.g., remove paths you don't want to allow
+# 3. Edit if needed
+greywall profiles edit opencode
 
 # 4. Run normally from now on
 greywall -- opencode
@@ -148,24 +150,24 @@ greywall -- opencode
 
 ### Re-learning after changes
 
-Running `--learning` again overwrites the existing template for that command:
+Running `--learning` again overwrites the existing profile for that command:
 
 ```bash
-# Update the template after installing new plugins
+# Update the profile after installing new plugins
 greywall --learning -- opencode
 ```
 
-### Using templates across commands
+### Using profiles across commands
 
-If multiple commands need the same permissions, use `--template`:
+If multiple commands need the same permissions, use `--profile`:
 
 ```bash
 # Learn from one command
 greywall --learning -- code
 
 # Apply to similar commands
-greywall --template code -- cursor
-greywall --template code -- windsurf
+greywall --profile code -- cursor
+greywall --profile code -- windsurf
 ```
 
 ## Path collapsing

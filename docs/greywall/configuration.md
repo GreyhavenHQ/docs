@@ -1,3 +1,8 @@
+---
+id: configuration
+title: Configuration Reference
+---
+
 # Configuration
 
 Greywall reads settings from `~/.config/greywall/greywall.json` by default (or `~/Library/Application Support/greywall/greywall.json` on macOS). Legacy `~/.greywall.json` is also supported. Pass `--settings ./greywall.json` to use a custom path. Config files support JSONC.
@@ -96,8 +101,9 @@ Greywall routes all network traffic through an external SOCKS5 proxy. Domain fil
 | `allowUnixSockets` | List of allowed Unix socket paths (macOS) |
 | `allowAllUnixSockets` | Allow all Unix sockets |
 | `allowLocalBinding` | Allow binding to local ports |
-| `allowLocalOutbound` | Allow outbound connections to localhost, e.g., local DBs (defaults to `allowLocalBinding` if not set; macOS only) |
-| `forwardPorts` | Host localhost ports to forward into the sandbox (Linux only; array of integers) |
+| `allowLocalOutbound` | Allow outbound connections to host `localhost`, e.g., local DBs. Defaults to `allowLocalBinding` if not set. **macOS only**; on Linux, use `forwardPorts` to reach specific host ports. |
+| `forwardPorts` | Host localhost ports to forward into the sandbox (Linux only; array of integers). Equivalent to repeated `-f/--forward` flags. |
+| `httpProxyUrl` | HTTP CONNECT proxy URL (default: `http://localhost:43051`) |
 
 ## Filesystem Configuration
 
@@ -110,7 +116,7 @@ Greywall routes all network traffic through an external SOCKS5 proxy. Domain fil
 | `denyWrite` | Paths to deny writing (takes precedence over `allowWrite`) |
 | `allowGitConfig` | Allow writes to `.git/config` files |
 
-To opt out of deny-by-default reads, set `"defaultDenyRead": false`. Use `--learning` mode to automatically discover which paths a command needs. See [Learning Mode](learning.md).
+To opt out of deny-by-default reads, set `"defaultDenyRead": false`. Use `--learning` mode to automatically discover which paths a command needs. See [Learning Mode](./learning-mode).
 
 ## Command Configuration
 
@@ -244,12 +250,34 @@ SSH host patterns support wildcards anywhere:
 7. Check if command matches `allowedCommands` → **ALLOW**
 8. Default → **DENY**
 
+## Credential Protection
+
+Greywall can keep API keys and secrets out of sandboxed processes by replacing them with opaque placeholders and letting greyproxy substitute the real values at the HTTP layer. See [Credential Protection](./credential-protection) for the full walkthrough.
+
+| Field | Description |
+|-------|-------------|
+| `credentials.secrets` | Additional environment variables to treat as credentials, beyond the auto-detected list. Equivalent to repeated `--secret` flags. |
+| `credentials.inject` | Labels of credentials stored in the greyproxy dashboard to inject into the sandbox as environment variables. Equivalent to repeated `--inject` flags. |
+| `credentials.ignore` | Environment variables to exclude from credential detection even if they match the auto-detection heuristics. Equivalent to repeated `--ignore-secret` flags. |
+
+Example:
+
+```json
+{
+  "credentials": {
+    "secrets": ["LITELLM_NOTRACK_API_KEY"],
+    "inject": ["ANTHROPIC_API_KEY", "OPENAI_API_KEY"],
+    "ignore": ["PUBLIC_API_TOKEN"]
+  }
+}
+```
+
 ## Other Options
 
 | Field | Description |
 |-------|-------------|
-| `allowPty` | Allow pseudo-terminal (PTY) allocation in the sandbox (for MacOS) |
-| `allowAudio` | Expose PulseAudio and PipeWire sockets inside the sandbox so commands can produce audio output (Linux only). Note: these sockets also allow microphone capture and, via PipeWire, camera/screen access. Disabled by default. |
+| `allowPty` | Allow pseudo-terminal (PTY) allocation in the sandbox (macOS) |
+| `allowAudio` | Expose PulseAudio and PipeWire sockets inside the sandbox so commands can produce audio output (Linux only; disabled by default). Note that these sockets also permit microphone capture and, via PipeWire, camera and screen access. |
 
 ## Importing from Claude Code
 
@@ -300,5 +328,5 @@ Global tool permissions (e.g., bare `Read`, `Write`, `Grep`) are skipped since g
 
 ## See Also
 
-- Config templates: [`docs/templates/`](docs/templates/)
-- Workflow guides: [`docs/recipes/`](docs/recipes/)
+- Config templates: [`./templates`](./templates)
+- Workflow guides: [`./recipes/`](./recipes/)
