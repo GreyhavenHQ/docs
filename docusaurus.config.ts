@@ -11,6 +11,10 @@ const config: Config = {
     v4: true,
   },
 
+  customFields: {
+    n8nWebhookUrl: 'https://n8n.monadical.io/webhook-test/docs-chat',
+  },
+
   url: 'https://docs.greywall.io',
   baseUrl: '/',
 
@@ -133,3 +137,4 @@ const config: Config = {
 };
 
 export default config;
+// export default
