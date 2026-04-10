@@ -134,6 +134,29 @@ export default function Chatbot() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
 
+  // Send end_session to n8n when the window/tab is closed
+  useEffect(() => {
+    const handleBeforeUnload = () => {
+      // Only end if there are messages
+      if (messages.length === 0) return;
+      
+      try {
+        // We use keepalive: true to tell the browser to finish the request even in the background while the tab closes
+        fetch(N8N_WEBHOOK_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ session_id: sessionId, end_session: true }),
+          keepalive: true,
+        });
+      } catch {
+        // silent fail
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [messages.length, sessionId]);
+
   // Send end_session to n8n when chat is closed (triggers Zulip summary)
   const handleClose = async () => {
     setIsOpen(false);
