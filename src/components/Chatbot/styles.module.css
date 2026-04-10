@@ -23,6 +23,12 @@
   box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
 }
 
+.chatbotContainer.expanded {
+  width: 800px;
+  max-width: calc(100vw - 4rem);
+  height: calc(100vh - 4rem);
+}
+
 .chatbotContainer.minimized {
   width: auto;
   height: 48px;
@@ -218,6 +224,103 @@
 
 [data-theme='dark'] .botContent th {
   background-color: var(--ifm-color-emphasis-200);
+}
+
+/* Table Placeholder Styles */
+.tablePlaceholder {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem;
+  background-color: var(--ifm-color-emphasis-100);
+  border: 1px solid var(--ifm-color-emphasis-300);
+  border-radius: 0.5rem;
+  margin-top: 0.5rem;
+  margin-bottom: 0.75rem;
+}
+
+[data-theme='dark'] .tablePlaceholder {
+  background-color: var(--ifm-color-emphasis-200);
+}
+
+.tableIcon {
+  font-size: 1.25rem;
+}
+
+.tableText {
+  flex: 1;
+  font-weight: 500;
+  color: var(--ifm-font-color-base);
+}
+
+.viewTableBtn {
+  padding: 0.4rem 0.75rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #fff;
+  background-color: var(--ifm-color-primary);
+  border: none;
+  border-radius: 0.25rem;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.viewTableBtn:hover {
+  background-color: var(--ifm-color-primary-dark);
+}
+
+/* Table Modal Styles */
+.tableModalOverlay {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100000;
+  padding: 2rem;
+}
+
+.tableModalContent {
+  background-color: var(--ifm-background-surface-color);
+  border: 1px solid var(--ifm-color-emphasis-300);
+  border-radius: 0.75rem;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+  max-width: 90vw;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  animation: fadeIn 0.2s ease-in-out;
+}
+
+[data-theme='dark'] .tableModalContent {
+  background-color: #0c0c0b;
+}
+
+.tableModalHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid var(--ifm-color-emphasis-200);
+}
+
+.tableModalBodyContainer {
+  padding: 1.25rem;
+  overflow: auto;
+  flex: 1;
+}
+
+.modalTableBody {
+  width: auto;
+  min-width: 100%;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
 }
 
 .searchResultsList {

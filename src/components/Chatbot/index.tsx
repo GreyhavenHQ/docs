@@ -72,6 +72,11 @@ const ExpandIcon = () => (
     <path d="m15 3 6 3-3 6"/><path d="M21 6 12 15"/><path d="m9 21-6-3 3-6"/><path d="M3 18l9-9"/>
   </svg>
 );
+const ShrinkIcon = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="m15 15 6 3-3 6"/><path d="M21 18l-9-9"/><path d="m9 9-6-3 3-6"/><path d="M3 6l9 9"/>
+  </svg>
+);
 const CloseIcon = () => (
   <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <path d="M18 6 6 18"/><path d="m6 6 12 12"/>
@@ -111,12 +116,14 @@ const ArrowUpIcon = () => (
 // ── Component ─────────────────────────────────────────────────────────────────
 export default function Chatbot() {
   const [isOpen, setIsOpen] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(false);
   const [query, setQuery] = useState('');
   const [messages, setMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [sessionId, setSessionId] = useState(generateSessionId);
   const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
   const [hasOfferedSupport, setHasOfferedSupport] = useState(false);
+  const [modalTableContent, setModalTableContent] = useState<React.ReactNode | null>(null);
   const [dislikedIndexes, setDislikedIndexes] = useState<Set<number>>(new Set());
   const [likedIndexes, setLikedIndexes] = useState<Set<number>>(new Set());
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -287,7 +294,7 @@ export default function Chatbot() {
 
   // ── Open chat ──────────────────────────────────────────────────────────────
   return (
-    <div className={styles.chatbotContainer}>
+    <div className={clsx(styles.chatbotContainer, isExpanded && styles.expanded)}>
       {/* Header */}
       <div className={styles.header}>
         <div className={styles.titleArea}>
@@ -295,8 +302,8 @@ export default function Chatbot() {
           Assistant
         </div>
         <div className={styles.controls}>
-          <button className={styles.controlButton} aria-label="Expand">
-            <ExpandIcon />
+          <button className={styles.controlButton} onClick={() => setIsExpanded(!isExpanded)} aria-label={isExpanded ? "Shrink" : "Expand"}>
+            {isExpanded ? <ShrinkIcon /> : <ExpandIcon />}
           </button>
           <button className={styles.controlButton} onClick={handleClose} aria-label="Close">
             <CloseIcon />
@@ -323,7 +330,25 @@ export default function Chatbot() {
                 <SearchIcon /> Searching documentation…
               </div>
               <div className={styles.botContent}>
-                <ReactMarkdown remarkPlugins={[remarkGfm]}>{msg.content}</ReactMarkdown>
+                <ReactMarkdown 
+                  remarkPlugins={[remarkGfm]}
+                  components={{
+                    table: ({node, ...props}) => (
+                      <div className={styles.tablePlaceholder}>
+                        <span className={styles.tableIcon}>📋</span>
+                        <span className={styles.tableText}>Table Data</span>
+                        <button 
+                          onClick={() => setModalTableContent(<table {...props} className={styles.modalTableBody} />)} 
+                          className={styles.viewTableBtn}
+                        >
+                          View Table
+                        </button>
+                      </div>
+                    )
+                  }}
+                >
+                  {msg.content}
+                </ReactMarkdown>
               </div>
               <div className={styles.actions}>
                 <button 
@@ -396,6 +421,28 @@ export default function Chatbot() {
           </button>
         </form>
       </div>
+
+      {/* Table Modal Overlay */}
+      {modalTableContent && (
+        <div className={styles.tableModalOverlay} onClick={() => setModalTableContent(null)}>
+          <div className={styles.tableModalContent} onClick={e => e.stopPropagation()}>
+            <div className={styles.tableModalHeader}>
+              <div className={styles.titleArea}>
+                <SparklesIcon />
+                Data Table
+              </div>
+              <button className={styles.controlButton} onClick={() => setModalTableContent(null)} aria-label="Close Modal">
+                <CloseIcon />
+              </button>
+            </div>
+            <div className={styles.tableModalBodyContainer}>
+              <div className={styles.botContent}>
+                {modalTableContent}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
