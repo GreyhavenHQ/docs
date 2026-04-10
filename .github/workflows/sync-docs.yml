@@ -1,0 +1,81 @@
+name: Sync product docs
+
+on:
+  repository_dispatch:
+    types: [sync-docs]
+  workflow_dispatch:
+    inputs:
+      product:
+        description: Which product to sync
+        required: true
+        type: choice
+        options:
+          - greyproxy
+          - greywall
+      ref:
+        description: Source ref (tag, branch, or sha)
+        required: true
+        default: main
+        type: string
+
+concurrency:
+  group: sync-docs-${{ github.event.client_payload.product || inputs.product }}
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Resolve inputs
+        id: vars
+        run: |
+          product="${{ github.event.client_payload.product || inputs.product }}"
+          ref="${{ github.event.client_payload.ref || inputs.ref }}"
+          case "$product" in
+            greyproxy) source_repo="GreyhavenHQ/greyproxy" ;;
+            greywall)  source_repo="GreyhavenHQ/greywall"  ;;
+            *) echo "Unknown product: $product" >&2; exit 1 ;;
+          esac
+          echo "product=$product"       >> "$GITHUB_OUTPUT"
+          echo "ref=$ref"               >> "$GITHUB_OUTPUT"
+          echo "source_repo=$source_repo" >> "$GITHUB_OUTPUT"
+
+      - name: Checkout docs repo
+        uses: actions/checkout@v4
+
+      - name: Checkout source docs at ref (sparse)
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ steps.vars.outputs.source_repo }}
+          ref: ${{ steps.vars.outputs.ref }}
+          path: .source
+          sparse-checkout: docs
+          sparse-checkout-cone-mode: false
+          fetch-depth: 1
+
+      - name: Sync docs/${{ steps.vars.outputs.product }} (1:1 mirror)
+        run: |
+          set -euo pipefail
+          dest="docs/${{ steps.vars.outputs.product }}"
+          src=".source/docs"
+          if [ ! -d "$src" ]; then
+            echo "No docs/ directory found in source repo at ref ${{ steps.vars.outputs.ref }}" >&2
+            exit 1
+          fi
+          mkdir -p "$dest"
+          rsync -a --delete "$src"/ "$dest"/
+
+      - name: Commit and push
+        run: |
+          set -euo pipefail
+          git config user.name  "greyhaven-docs-bot"
+          git config user.email "docs-bot@users.noreply.github.com"
+          git add "docs/${{ steps.vars.outputs.product }}"
+          if git diff --cached --quiet; then
+            echo "No changes to commit."
+            exit 0
+          fi
+          git commit -m "docs(${{ steps.vars.outputs.product }}): sync from ${{ steps.vars.outputs.ref }} [skip ci]"
+          git push
