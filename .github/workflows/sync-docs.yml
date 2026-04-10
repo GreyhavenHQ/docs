@@ -19,7 +19,7 @@ on:
         type: string
 
 concurrency:
-  group: sync-docs-${{ github.event.client_payload.product || inputs.product }}
+  group: sync-docs
   cancel-in-progress: false
 
 jobs:
