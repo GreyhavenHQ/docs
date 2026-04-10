@@ -23,6 +23,42 @@ function generateSessionId() {
   return 'session-' + Math.random().toString(36).slice(2, 10) + '-' + Date.now();
 }
 
+const MAX_REQUESTS_PER_HOUR = 50;
+const MESSAGE_COOLDOWN_MS = 2000;
+
+function checkRateLimit(): 'ok' | 'limit_reached' | 'cooldown' {
+  if (typeof window === 'undefined') return 'ok';
+  try {
+    const now = Date.now();
+    const oneHourAgo = now - 60 * 60 * 1000;
+    
+    // Read previous requests history
+    const historyStr = localStorage.getItem('chatbot_request_history');
+    let history: number[] = historyStr ? JSON.parse(historyStr) : [];
+    
+    // Keep only requests from the last hour
+    history = history.filter((time) => time > oneHourAgo);
+    
+    if (history.length > 0) {
+      const lastRequestTime = history[history.length - 1];
+      if (now - lastRequestTime < MESSAGE_COOLDOWN_MS) {
+        return 'cooldown';
+      }
+    }
+    
+    if (history.length >= MAX_REQUESTS_PER_HOUR) {
+      return 'limit_reached'; // Limit reached
+    }
+    
+    // Add current request and save
+    history.push(now);
+    localStorage.setItem('chatbot_request_history', JSON.stringify(history));
+    return 'ok';
+  } catch (e) {
+    return 'ok'; // Fallback to allow request if localStorage is not available
+  }
+}
+
 // ── Icons ────────────────────────────────────────────────────────────────────
 const SparklesIcon = () => (
   <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -122,6 +158,25 @@ export default function Chatbot() {
     e.preventDefault();
     const trimmed = query.trim();
     if (!trimmed || isLoading) return;
+
+    const rateLimitStatus = checkRateLimit();
+    if (rateLimitStatus !== 'ok') {
+      const errorMessage = rateLimitStatus === 'cooldown'
+        ? 'Please wait a couple of seconds before sending another message.'
+        : 'You have reached the maximum number of requests (50 per hour). Please try again later.';
+        
+      setMessages((prev) => [
+        ...prev,
+        { role: 'user', content: trimmed },
+        { 
+          role: 'bot', 
+          content: errorMessage, 
+          error: true 
+        },
+      ]);
+      setQuery('');
+      return;
+    }
 
     const userMessage: Message = { role: 'user', content: trimmed };
     setMessages((prev) => [...prev, userMessage]);
