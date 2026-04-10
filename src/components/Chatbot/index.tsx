@@ -123,7 +123,7 @@ export default function Chatbot() {
   const [sessionId, setSessionId] = useState(generateSessionId);
   const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
   const [hasOfferedSupport, setHasOfferedSupport] = useState(false);
-  const [modalTableContent, setModalTableContent] = useState<React.ReactNode | null>(null);
+  const [modalTableData, setModalTableData] = useState<{ node: React.ReactNode; title: string } | null>(null);
   const [dislikedIndexes, setDislikedIndexes] = useState<Set<number>>(new Set());
   const [likedIndexes, setLikedIndexes] = useState<Set<number>>(new Set());
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -333,18 +333,21 @@ export default function Chatbot() {
                 <ReactMarkdown 
                   remarkPlugins={[remarkGfm]}
                   components={{
-                    table: ({node, ...props}) => (
-                      <div className={styles.tablePlaceholder}>
-                        <span className={styles.tableIcon}>📋</span>
-                        <span className={styles.tableText}>Table Data</span>
-                        <button 
-                          onClick={() => setModalTableContent(<table {...props} className={styles.modalTableBody} />)} 
-                          className={styles.viewTableBtn}
-                        >
-                          View Table
-                        </button>
-                      </div>
-                    )
+                    table: ({node, ...props}) => {
+                      const title = i > 0 && messages[i - 1].role === 'user' ? messages[i - 1].content : 'Data Table';
+                      return (
+                        <div className={styles.tablePlaceholder}>
+                          <span className={styles.tableIcon}>📋</span>
+                          <span className={styles.tableText}>Table Data</span>
+                          <button 
+                            onClick={() => setModalTableData({ node: <table {...props} className={styles.modalTableBody} />, title })} 
+                            className={styles.viewTableBtn}
+                          >
+                            View Table
+                          </button>
+                        </div>
+                      );
+                    }
                   }}
                 >
                   {msg.content}
@@ -423,21 +426,21 @@ export default function Chatbot() {
       </div>
 
       {/* Table Modal Overlay */}
-      {modalTableContent && (
-        <div className={styles.tableModalOverlay} onClick={() => setModalTableContent(null)}>
+      {modalTableData && (
+        <div className={styles.tableModalOverlay} onClick={() => setModalTableData(null)}>
           <div className={styles.tableModalContent} onClick={e => e.stopPropagation()}>
             <div className={styles.tableModalHeader}>
-              <div className={styles.titleArea}>
+              <div className={styles.titleArea} style={{ fontSize: '1rem' }}>
                 <SparklesIcon />
-                Data Table
+                {modalTableData.title}
               </div>
-              <button className={styles.controlButton} onClick={() => setModalTableContent(null)} aria-label="Close Modal">
+              <button className={styles.controlButton} onClick={() => setModalTableData(null)} aria-label="Close Modal">
                 <CloseIcon />
               </button>
             </div>
             <div className={styles.tableModalBodyContainer}>
               <div className={styles.botContent}>
-                {modalTableContent}
+                {modalTableData.node}
               </div>
             </div>
           </div>
