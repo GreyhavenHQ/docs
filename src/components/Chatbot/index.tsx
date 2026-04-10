@@ -8,7 +8,7 @@ import styles from './styles.module.css';
 // siteConfig.customFields.n8nWebhookUrl
 const N8N_WEBHOOK_URL =
   (typeof window !== 'undefined' && (window as any).__N8N_WEBHOOK_URL__) ||
-  'https://n8n.monadical.io/webhook-test/docs-chat';
+  'https://n8n.monadical.io/webhook/docs-chat';
 
 // ── Types ────────────────────────────────────────────────────────────────────
 type Role = 'user' | 'bot';
