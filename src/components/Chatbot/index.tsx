@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import clsx from 'clsx';
+import ReactMarkdown from 'react-markdown';
 import styles from './styles.module.css';
 
 // ── Config ──────────────────────────────────────────────────────────────────
@@ -76,7 +77,7 @@ export default function Chatbot() {
   const [query, setQuery] = useState('');
   const [messages, setMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [sessionId] = useState(generateSessionId);
+  const [sessionId, setSessionId] = useState(generateSessionId);
   const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -110,6 +111,10 @@ export default function Chatbot() {
     } catch {
       // silent — summary is best-effort
     }
+
+    // Clean up local state for a fresh start next time
+    setMessages([]);
+    setSessionId(generateSessionId());
   };
 
   // Send message to n8n
@@ -204,7 +209,9 @@ export default function Chatbot() {
               <div className={styles.progressItem}>
                 <SearchIcon /> Searching documentation…
               </div>
-              <div className={styles.botContent}>{msg.content}</div>
+              <div className={styles.botContent}>
+                <ReactMarkdown>{msg.content}</ReactMarkdown>
+              </div>
               <div className={styles.actions}>
                 <button className={styles.actionBtn} title="Helpful">
                   <ThumbsUpIcon />
