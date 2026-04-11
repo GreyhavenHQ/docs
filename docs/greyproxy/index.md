@@ -52,7 +52,7 @@ See [Using Greyproxy with Greywall](/greyproxy/using-with-greywall) for integrat
 ## Quick Install
 
 ```bash
-# macOS via Homebrew
+# macOS via Homebrew (registers the launchd agent automatically)
 brew tap greyhavenhq/tap
 brew install greyproxy
 
@@ -60,7 +60,7 @@ brew install greyproxy
 greywall setup
 ```
 
-See the [Quickstart](/greyproxy/quickstart) for full installation instructions.
+Prebuilt binaries for macOS (amd64, arm64) and Linux (amd64, arm64) are also published on the [Greyproxy releases page](https://github.com/GreyhavenHQ/greyproxy/releases). See the [Quickstart](/greyproxy/quickstart) for full installation instructions, including building from source.
 
 ## Acknowledgments
 

@@ -7,19 +7,42 @@ title: Quickstart
 
 ## Installation
 
-### From Source (recommended for now)
+### Homebrew (macOS)
+
+```bash
+brew tap greyhavenhq/tap
+brew install greywall
+```
+
+This also installs [Greyproxy](../greyproxy) as a dependency.
+
+### Linux / Mac install script
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/GreyhavenHQ/greywall/main/install.sh | sh
+```
+
+The script downloads the latest release from GitHub, verifies its checksum, installs the binary to `~/.local/bin/greywall`, and then runs `greywall setup` to install and start greyproxy. Set `INSTALL_DIR` to pick a different install location, or pass a version tag (e.g. `sh -s -- v0.1.0`) to pin a specific release.
+
+### Using Go install
+
+```bash
+go install github.com/GreyhavenHQ/greywall/cmd/greywall@latest
+```
+
+### Using mise
+
+```bash
+mise use -g github:GreyhavenHQ/greywall
+mise use -g github:GreyhavenHQ/greyproxy
+```
+
+### From source
 
 ```bash
 git clone https://github.com/GreyhavenHQ/greywall
 cd greywall
-go build -o greywall ./cmd/greywall
-sudo mv greywall /usr/local/bin/
-```
-
-### Using Go Install
-
-```bash
-go install github.com/GreyhavenHQ/greywall/cmd/greywall@latest
+make setup && make build
 ```
 
 ### Linux Dependencies

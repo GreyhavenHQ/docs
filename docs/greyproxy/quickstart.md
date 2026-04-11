@@ -14,12 +14,20 @@ brew tap greyhavenhq/tap
 brew install greyproxy
 ```
 
+On macOS the Homebrew cask runs `greyproxy install -f` automatically after installation, so the launchd user agent is registered and the dashboard is reachable on port 43080 as soon as `brew install` finishes. You can skip the "Install as a Service" section below if you installed this way.
+
 ### Build from Source
 
 ```bash
 git clone https://github.com/greyhavenhq/greyproxy.git
 cd greyproxy
 go build ./cmd/greyproxy
+```
+
+On macOS, codesign the freshly built binary before running `install` so that Gatekeeper does not quarantine it:
+
+```bash
+codesign --sign - --force ./greyproxy
 ```
 
 ### Via Greywall

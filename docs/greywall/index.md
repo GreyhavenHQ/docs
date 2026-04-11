@@ -51,6 +51,13 @@ curl -fsSL https://raw.githubusercontent.com/GreyhavenHQ/greywall/main/install.s
 go install github.com/GreyhavenHQ/greywall/cmd/greywall@latest
 ```
 
+**[mise](https://mise.jdx.dev/):**
+
+```bash
+mise use -g github:GreyhavenHQ/greywall
+mise use -g github:GreyhavenHQ/greyproxy
+```
+
 **Build from source:**
 
 ```bash
@@ -63,8 +70,10 @@ make setup && make build
 
 **Linux dependencies:**
 
-- `bubblewrap` — container-free sandboxing (required)
-- `socat` — network bridging (required)
+- `bubblewrap` (required), container-free sandboxing
+- `socat` (required), network bridging
+- `xdg-dbus-proxy` (optional), filtered D-Bus proxy for `notify-send` support
+- `libsecret-tools` (optional), keyring credential injection for `gh` and `glab`
 
 Check dependency status with `greywall check`.
 
