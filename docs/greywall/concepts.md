@@ -7,21 +7,21 @@ title: Concepts
 
 Greywall combines two ideas:
 
-1. **An OS sandbox** to enforce "no direct network" and restrict filesystem operations.
-2. **Local filtering proxies** (HTTP + SOCKS5) to selectively allow outbound traffic by domain.
+1. **An OS sandbox** that blocks direct network access and restricts filesystem operations.
+2. **Delegated network filtering** through an external SOCKS5 proxy, by default [Greyproxy](/greyproxy).
 
 ## Network Model
 
-By default, greywall blocks all outbound network access.
+Greywall does not run its own proxy and does not decide which hosts are allowed. The sandbox blocks direct outbound traffic at the OS layer, and the only reachable network endpoint from inside the sandbox is a SOCKS5 proxy. Every rule, every allowlist, every decision about what can talk to what lives in that proxy.
 
-When you allow domains, greywall:
+By default, greywall points at [Greyproxy](/greyproxy) at `socks5://localhost:43052` with DNS at `localhost:43053`. If no proxy is running, the sandbox has no network at all. You can point at any SOCKS5 proxy with `--proxy <url>` or the `proxyUrl` config key.
 
-- Starts local HTTP and SOCKS5 proxies
-- Sets proxy environment variables (`HTTP_PROXY`, `HTTPS_PROXY`, `ALL_PROXY`)
-- Allows the sandboxed process to connect only to the local proxies
-- Filters outbound connections by **destination domain**
+How traffic reaches the proxy depends on the platform:
 
-Greywall can also delegate domain filtering entirely to an external SOCKS5 proxy (like [Greyproxy](../greyproxy)), which gives you a live dashboard and rule engine.
+- **Linux**: the sandbox runs in an isolated network namespace (`bubblewrap --unshare-net`) with a TUN device inside. All traffic is captured by `tun2socks` and forwarded to the external proxy over a Unix-socket bridge. This works for any process regardless of whether it honors proxy environment variables. If TUN is unavailable, greywall falls back to setting `HTTP_PROXY`, `HTTPS_PROXY`, and `ALL_PROXY`.
+- **macOS**: the Seatbelt profile blocks direct outbound connections and greywall sets `HTTP_PROXY`, `HTTPS_PROXY`, and `ALL_PROXY` to point at the proxy. Applications that honor those variables are routed through it. Applications that ignore them (for example Node.js's built-in `http`/`https`) are blocked by the sandbox rather than silently bypassing the proxy.
+
+Because filtering lives in the proxy, domain allowlists, rule changes, and live approval all happen in the proxy's dashboard or API, not in the greywall config. See [Greyproxy](/greyproxy) for how that side works.
 
 ### Localhost Controls
 
@@ -83,7 +83,7 @@ Workflow tip:
 
 ## Platform Notes
 
-- **macOS**: uses `sandbox-exec` with generated Seatbelt profiles.
-- **Linux**: uses `bubblewrap` for namespaces + `socat` bridges to connect the isolated network namespace to host-side proxies.
+- **macOS**: uses `sandbox-exec` with generated Seatbelt profiles; the sandbox shares the host network stack and relies on proxy environment variables to route outbound traffic through greyproxy.
+- **Linux**: uses `bubblewrap` for namespace isolation with a TUN device inside the sandbox, so `tun2socks` captures every outbound connection and forwards it to greyproxy through a Unix-socket bridge.
 
 For the under-the-hood view, see [Architecture](./architecture).
