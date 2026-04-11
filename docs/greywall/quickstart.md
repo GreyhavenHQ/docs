@@ -28,7 +28,10 @@ The script downloads the latest release from GitHub, verifies its checksum, inst
 
 ```bash
 go install github.com/GreyhavenHQ/greywall/cmd/greywall@latest
+greywall setup
 ```
+
+`go install` only places the greywall binary on your `$PATH`. Run `greywall setup` afterwards to install and start [greyproxy](/greyproxy), which greywall relies on for network filtering. Without it, the sandbox has no reachable network.
 
 ### Using mise
 
@@ -174,4 +177,3 @@ greywall -p 3000 -c "npm run dev"
 - Read **[Why Greywall](./why-greywall)** to understand when greywall is a good fit (and when it isn't).
 - Learn the mental model in **[Concepts](./concepts)**.
 - Use **[Troubleshooting](./troubleshooting)** if something is blocked unexpectedly.
-- Follow workflow-specific guides in **[Recipes](./recipes/)** (npm/pip/git/CI).

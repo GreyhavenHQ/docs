@@ -279,54 +279,6 @@ Example:
 | `allowPty` | Allow pseudo-terminal (PTY) allocation in the sandbox (macOS) |
 | `allowAudio` | Expose PulseAudio and PipeWire sockets inside the sandbox so commands can produce audio output (Linux only; disabled by default). Note that these sockets also permit microphone capture and, via PipeWire, camera and screen access. |
 
-## Importing from Claude Code
-
-If you've been using Claude Code and have already built up permission rules, you can import them into greywall:
-
-```bash
-# Preview import (prints JSON to stdout)
-greywall import --claude
-
-# Save to the default config path
-greywall import --claude --save
-
-# Import from a specific file
-greywall import --claude -f ~/.claude/settings.json --save
-
-# Save to a specific output file
-greywall import --claude -o ./greywall.json
-
-# Import without extending any template (minimal config)
-greywall import --claude --no-extend --save
-
-# Import and extend a different template
-greywall import --claude --extend local-dev-server --save
-```
-
-### Default Template
-
-By default, imports extend the `code` template which provides sensible defaults:
-
-- Filesystem protections for secrets and sensitive paths
-- Command restrictions for dangerous operations
-
-Use `--no-extend` if you want a minimal config without these defaults, or `--extend <template>` to choose a different base template.
-
-### Permission Mapping
-
-| Claude Code | Greywall |
-|-------------|-------|
-| `Bash(xyz)` allow | `command.allow: ["xyz"]` |
-| `Bash(xyz:*)` deny | `command.deny: ["xyz"]` |
-| `Read(path)` deny | `filesystem.denyRead: [path]` |
-| `Write(path)` allow | `filesystem.allowWrite: [path]` |
-| `Write(path)` deny | `filesystem.denyWrite: [path]` |
-| `Edit(path)` | Same as `Write(path)` |
-| `ask` rules | Converted to deny (greywall doesn't support interactive prompts) |
-
-Global tool permissions (e.g., bare `Read`, `Write`, `Grep`) are skipped since greywall uses path/command-based rules.
-
 ## See Also
 
-- Config templates: [`./templates`](./templates)
-- Workflow guides: [`./recipes/`](./recipes/)
+- Config profiles: [`./templates`](./templates)

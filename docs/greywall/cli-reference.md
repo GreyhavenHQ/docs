@@ -148,16 +148,6 @@ Open a saved profile in `$EDITOR` for direct editing.
 greywall profiles edit opencode
 ```
 
-### `greywall import --claude`
-
-Import permissions from a Claude Code settings file and convert them to a greywall config. See [Importing from Claude Code](./import-claude) for full documentation.
-
-```bash
-greywall import --claude
-greywall import --claude --save
-greywall import --claude -f ~/.claude/settings.json --save
-```
-
 ## Environment Variables
 
 | Variable | Description |
