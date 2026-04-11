@@ -9,7 +9,7 @@ Greywall uses a deny-by-default filesystem model: reads and writes are blocked u
 
 ## How it works
 
-1. **Run with `--learning`** — greywall relaxes the filesystem sandbox and uses `strace` to trace all file operations (`openat`, `creat`, `mkdir`, etc.).
+1. **Run with `--learning`**: greywall relaxes the filesystem sandbox and traces every file operation. On Linux it uses `strace` to follow syscalls (`openat`, `creat`, `mkdir`, and so on). On macOS it uses `eslogger`, the Endpoint Security framework's command-line client, to stream `open`, `create`, `write`, `unlink`, `truncate`, `rename`, `link`, and `fork` events for the sandboxed process tree.
 2. **Use the command normally** — interact with it as you would outside the sandbox. The trace captures every file read and write.
 3. **Template generated on exit** — greywall analyzes the trace, collapses paths into minimal directory sets, filters out system defaults and sensitive files, and saves a JSONC config template.
 4. **Next run auto-loads the template** — when you run the same command again (without `--learning`), greywall automatically loads the learned template.
@@ -35,13 +35,13 @@ greywall --learning -- <command>
 
 This runs the command inside the sandbox with:
 
-- **Relaxed filesystem** — reads and writes are allowed so strace can observe the full access pattern.
-- **strace tracing** — all filesystem-related syscalls are logged.
-- **Network still sandboxed** — network isolation remains in effect.
+- **Relaxed filesystem**: reads and writes are allowed so the tracer can observe the full access pattern.
+- **Filesystem tracing**: `strace` on Linux, `eslogger` on macOS. On macOS the tracer itself runs under `sudo` because the Endpoint Security framework requires it; the sandboxed command runs as your normal user.
+- **Network still sandboxed**: network isolation remains in effect.
 
 When the command exits, greywall:
 
-1. Parses the strace log for file access patterns.
+1. Parses the trace log for file access patterns.
 2. Filters out system paths (already allowed by default), the current working directory (auto-included), and sensitive paths (SSH keys, `.env` files, etc.).
 3. Collapses paths into minimal directory sets using application directory detection (e.g., multiple files under `~/.cache/opencode/` become a single `~/.cache/opencode` entry).
 4. Generates a JSONC template with `allowRead`, `allowWrite`, `denyWrite`, and `denyRead` sections.
@@ -180,12 +180,16 @@ Learning mode intelligently collapses file paths to avoid overly verbose templat
 
 ## Troubleshooting
 
-### "strace: attach: ptrace: Operation not permitted"
+### "strace: attach: ptrace: Operation not permitted" (Linux)
 
-Learning mode requires `ptrace` support. This may fail in:
+Learning mode on Linux requires `ptrace` support. This may fail in:
 
 - Docker containers without `--cap-add=SYS_PTRACE`
 - Environments with restrictive `kernel.yama.ptrace_scope` settings
+
+### "sudo: a password is required" (macOS)
+
+`eslogger` talks to the Endpoint Security framework and needs root, so greywall runs it through `sudo` at the start of learning mode. If sudo prompts for a password and you dismiss it, learning mode aborts. Run a `sudo` command beforehand to cache credentials, or configure a passwordless `sudo` entry for `/usr/bin/eslogger` if you use learning mode often.
 
 ### Template is too broad
 
@@ -202,7 +206,15 @@ Review the generated template and remove paths you don't want to allow. The temp
 
 ### Learning mode hangs after command exits
 
-This can happen if the traced command spawns long-lived child processes (LSP servers, file watchers). Greywall includes a monitor that detects when the main command exits and terminates strace, but in rare cases you may need to press Ctrl+C.
+This can happen if the traced command spawns long-lived child processes (LSP servers, file watchers). Greywall includes a monitor that detects when the main command exits and terminates the tracer, but in rare cases you may need to press Ctrl+C.
+
+## A word of caution
+
+Learning mode is driven by heuristics. It watches what a command happens to touch during one session and extrapolates a profile from that. Paths get collapsed into parent directories when they look application-specific, system defaults are filtered out, and sensitive locations (SSH keys, `.env`, and so on) are deliberately excluded even if the traced command reached for them. These rules cover most real workflows, but they are rules of thumb, not guarantees, and the profile they generate is a starting point rather than a finished contract.
+
+When you run the same command later without `--learning`, the sandbox enforces exactly what the learned profile allows. If the command uses a path the profile does not cover, it will not see a clean "permission denied" and move on. Many tools assume unrestricted filesystem access and fail in surprising ways when they hit an unexpected block: hangs while waiting for a lockfile that is silently unwritable, crashes on missing cache directories, retries that never converge, or plugins that simply do not load. If something feels off after a learning session, re-run with `-m` to see what is being blocked, then widen the profile.
+
+If you build a profile that works well for a tool other people are likely to use, please contribute it back. Open a pull request against the [greywall repository](https://github.com/GreyhavenHQ/greywall) to add or refine a default profile so everyone benefits.
 
 ## See also
 
