@@ -5,6 +5,8 @@ title: Header Redaction
 
 # Sensitive Header Redaction
 
+![Redacted headers in activity view](./img/header-redaction.png)
+
 Greyproxy stores HTTP transactions in its SQLite database for later inspection in the dashboard. To keep credentials out of that database, sensitive header values are replaced with `[REDACTED]` before storage. The original header name is preserved (so you can still tell that an `Authorization` header was present), but the value is gone.
 
 Redaction happens at capture time, before the row is written to disk. Nothing bypasses it, and the database never sees the original value.
