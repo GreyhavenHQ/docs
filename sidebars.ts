@@ -26,20 +26,7 @@ const sidebars: SidebarsConfig = {
       items: [
         {type: 'doc', id: 'greywall/learning-mode', label: 'Learning Mode'},
         {type: 'doc', id: 'greywall/agents', label: 'AI Agent Integration'},
-        {type: 'doc', id: 'greywall/import-claude', label: 'Import from Claude Code'},
         {type: 'doc', id: 'greywall/credential-protection', label: 'Credential Protection'},
-        {
-          type: 'category',
-          label: 'Recipes',
-          collapsed: true,
-          items: [
-            {type: 'doc', id: 'greywall/recipes/index', label: 'Overview'},
-            {type: 'doc', id: 'greywall/recipes/npm-install', label: 'npm install'},
-            {type: 'doc', id: 'greywall/recipes/pip-poetry', label: 'pip / poetry'},
-            {type: 'doc', id: 'greywall/recipes/git-clone', label: 'git clone'},
-            {type: 'doc', id: 'greywall/recipes/ci', label: 'CI Jobs'},
-          ],
-        },
         {type: 'doc', id: 'greywall/troubleshooting', label: 'Troubleshooting'},
         {type: 'doc', id: 'greywall/faq', label: 'FAQ'},
       ],
@@ -82,9 +69,11 @@ const sidebars: SidebarsConfig = {
       items: [
         {type: 'doc', id: 'greyproxy/using-with-greywall', label: 'Using with Greywall'},
         {type: 'doc', id: 'greyproxy/dashboard', label: 'Dashboard'},
+        {type: 'doc', id: 'greyproxy/tls-interception', label: 'TLS Interception (MITM)'},
         {type: 'doc', id: 'greyproxy/conversations', label: 'LLM Conversations'},
         {type: 'doc', id: 'greyproxy/credentials', label: 'Credential Substitution'},
         {type: 'doc', id: 'greyproxy/header-redaction', label: 'Header Redaction'},
+        {type: 'doc', id: 'greyproxy/silent-mode', label: 'Silent Mode'},
         {type: 'doc', id: 'greyproxy/troubleshooting', label: 'Troubleshooting'},
       ],
     },
