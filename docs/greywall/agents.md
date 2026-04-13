@@ -45,7 +45,7 @@ We provide these template for guardrailing CLI coding agents:
 - [`code`](https://github.com/GreyhavenHQ/greywall/blob/main/internal/templates/code.json) - Routes all network traffic through an external SOCKS5 proxy. Protects secrets, restricts dangerous commands.
 - [`code-relaxed`](https://github.com/GreyhavenHQ/greywall/blob/main/internal/templates/code-relaxed.json) - Same filesystem/command protections as `code`, with relaxed network settings for environments where TUN is unavailable.
 
-You can use it like `greywall -t code -- claude`.
+You can use it like `greywall --profile code -- claude`.
 
 | Agent | Works with template | Notes |
 |-------|--------| ----- |

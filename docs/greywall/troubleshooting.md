@@ -134,7 +134,7 @@ If TUN is unavailable (fallback mode), Node apps that make direct HTTP(S) reques
 
 ## Local services (Redis/Postgres/etc.) fail inside the sandbox
 
-If your process needs to connect to `localhost` services, set:
+If your process needs to connect to host `localhost` services on macOS, set:
 
 ```json
 {
@@ -142,10 +142,52 @@ If your process needs to connect to `localhost` services, set:
 }
 ```
 
+On Linux, the sandbox runs in an isolated network namespace and `allowLocalOutbound` is a no-op. Forward the specific host ports instead:
+
+```bash
+greywall -f 5432 -f 6379 -- make test
+```
+
+Or in the config file:
+
+```json
+{
+  "network": { "forwardPorts": [5432, 6379] }
+}
+```
+
 If you're running a server inside the sandbox that must accept connections:
 
 - set `network.allowLocalBinding: true` (to bind)
 - use `-p <port>` (to expose inbound port(s))
+
+## `notify-send` fails inside the sandbox
+
+`notify-send` needs the D-Bus session bus, which is blocked by default to prevent sandbox escape via GVFS and gnome-keyring. Install `xdg-dbus-proxy` to enable it:
+
+```bash
+# Ubuntu/Debian
+sudo apt install xdg-dbus-proxy
+
+# Fedora
+sudo dnf install xdg-dbus-proxy
+
+# Arch
+sudo pacman -S xdg-dbus-proxy
+```
+
+When `xdg-dbus-proxy` is present, greywall automatically starts a filtered D-Bus proxy that only allows `org.freedesktop.Notifications` and blocks everything else. Run `greywall check` to verify it was picked up.
+
+## Local host services unreachable from Linux sandbox
+
+On Linux the sandbox runs in its own network namespace, so the host's `localhost` is not reachable even if `allowLocalOutbound` is enabled. Use `-f/--forward` (or `forwardPorts` in the config file) to forward specific host ports into the sandbox:
+
+```bash
+# Reach a host Postgres on 5432 from inside the sandbox
+greywall -f 5432 -- psql -h localhost
+```
+
+See [Concepts](./concepts#port-forwarding-platform-differences) for the full explanation of the macOS/Linux difference.
 
 ## "Permission denied" on file writes
 

@@ -164,7 +164,7 @@ greywall -m -d -- your-command
 
 ### My command needs to connect to localhost services (Redis, Postgres, etc.)
 
-By default, localhost outbound is disabled. Enable it in your config:
+On **macOS**, the sandbox shares the host network stack, so enabling `allowLocalOutbound` is enough:
 
 ```json
 {
@@ -174,10 +174,26 @@ By default, localhost outbound is disabled. Enable it in your config:
 }
 ```
 
-Or use the `local-dev-server` template which enables both binding and localhost outbound:
+On **Linux**, the sandbox runs in an isolated network namespace and `allowLocalOutbound` has no effect. Forward the specific host ports into the sandbox instead:
 
 ```bash
-greywall -t local-dev-server -- your-command
+# CLI
+greywall -f 5432 -f 6379 -- your-command
+```
+
+```json
+// Config
+{
+  "network": {
+    "forwardPorts": [5432, 6379]
+  }
+}
+```
+
+You can also apply the `local-dev-server` profile, which enables binding (and `allowLocalOutbound` on macOS):
+
+```bash
+greywall --profile local-dev-server -- your-command
 ```
 
 ### Can greywall detect what filesystem paths a command needs automatically?

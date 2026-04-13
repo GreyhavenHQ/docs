@@ -11,17 +11,20 @@ The greyproxy rule engine controls which network connections are allowed or deni
 
 | Field | Type | Description |
 |-------|------|-------------|
-| `destination` | string | Hostname or glob pattern to match (see [Pattern Syntax](#pattern-syntax)) |
-| `port` | integer | Port to match. `0` means **any port**. |
-| `action` | string | `"allow"` or `"deny"` |
+| `container_pattern` | string | Glob to match against the source container or process name. `*` matches any container. |
+| `destination_pattern` | string | Hostname or glob pattern to match (see [Pattern Syntax](#pattern-syntax)). |
+| `port_pattern` | string | Port to match. `*` or an empty value means any port. |
+| `action` | string | `"allow"` or `"deny"`. |
+| `notes` | string | Optional free-form annotation. |
+| `expires_at` | string | Optional RFC 3339 timestamp; the rule becomes inactive after this time. |
 
 ## Evaluation Order
 
 For every incoming connection, the rule engine evaluates rules in this order:
 
-1. **Deny rules first** — if the connection matches any deny rule, it is blocked immediately
-2. **Allow rules second** — if the connection matches any allow rule, it is forwarded
-3. **No match** — the connection is either blocked or queued as a **pending request** (see [Pending Requests](#pending-requests))
+1. **Deny rules first**: if the connection matches any deny rule, it is blocked immediately.
+2. **Allow rules second**: if the connection matches any allow rule, it is forwarded.
+3. **No match**: the connection is either blocked or queued as a **pending request** (see [Pending Requests](#pending-requests)).
 
 Deny rules always take precedence over allow rules, regardless of creation order.
 
@@ -34,8 +37,8 @@ The `destination` field supports glob-style wildcard patterns:
 | `registry.npmjs.org` | Exact hostname only | `foo.npmjs.org` |
 | `*.npmjs.org` | Any subdomain of `npmjs.org` | `npmjs.org` itself |
 | `*.*.npmjs.org` | Two levels of subdomains | `foo.npmjs.org` |
-| `api.*` | Any hostname starting with `api.` | — |
-| `*` | Every hostname | — |
+| `api.*` | Any hostname starting with `api.` | (no counter-example) |
+| `*` | Every hostname | (no counter-example) |
 
 Matching is case-insensitive.
 
@@ -55,15 +58,25 @@ Open [http://localhost:43080](http://localhost:43080), navigate to **Rules**, an
 # List all rules
 curl http://localhost:43080/api/rules
 
-# Add an allow rule
+# Add an allow rule (any container, any port)
 curl -X POST http://localhost:43080/api/rules \
   -H "Content-Type: application/json" \
-  -d '{"destination": "*.npmjs.org", "port": 0, "action": "allow"}'
+  -d '{
+    "container_pattern": "*",
+    "destination_pattern": "*.npmjs.org",
+    "port_pattern": "*",
+    "action": "allow"
+  }'
 
-# Add a deny rule for a specific port
+# Add a deny rule for a specific port and container
 curl -X POST http://localhost:43080/api/rules \
   -H "Content-Type: application/json" \
-  -d '{"destination": "telemetry.example.com", "port": 443, "action": "deny"}'
+  -d '{
+    "container_pattern": "opencode",
+    "destination_pattern": "telemetry.example.com",
+    "port_pattern": "443",
+    "action": "deny"
+  }'
 
 # Delete a rule by ID
 curl -X DELETE http://localhost:43080/api/rules/42
@@ -102,7 +115,7 @@ curl -X POST http://localhost:43080/api/pending/7/deny
 
 The recommended workflow for a new project or tool:
 
-1. **Start with no allow rules** — everything is either blocked or pending
+1. **Start with no allow rules**: everything is either blocked or pending
 2. **Run your command** through greywall (or configure `ALL_PROXY` to point at greyproxy)
 3. **Watch the Pending tab** in the dashboard
 4. **Allow** the destinations your workflow legitimately needs
@@ -113,7 +126,7 @@ This iterative approach produces a minimal, auditable policy rather than a permi
 
 ## Persisting Rules
 
-All rules are stored in the SQLite database (`greyproxy.db` by default). They persist across restarts automatically — no export step needed for ongoing use.
+All rules are stored in the SQLite database under greyproxy's data directory (`~/.local/share/greyproxy/greyproxy.db` on Linux, `~/Library/Application Support/greyproxy/greyproxy.db` on macOS). They persist across restarts automatically, with no export step needed for ongoing use.
 
 To share rules across machines or commit them to a repo, export them via the API:
 

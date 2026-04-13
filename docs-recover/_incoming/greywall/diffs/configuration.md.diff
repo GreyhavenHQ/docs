@@ -1,0 +1,22 @@
+diff --git a/docs/configuration.md b/docs/configuration.md
+index 3bf81c9..118871c 100644
+--- a/docs/configuration.md
++++ b/docs/configuration.md
+@@ -96,7 +96,8 @@ Greywall routes all network traffic through an external SOCKS5 proxy. Domain fil
+ | `allowUnixSockets` | List of allowed Unix socket paths (macOS) |
+ | `allowAllUnixSockets` | Allow all Unix sockets |
+ | `allowLocalBinding` | Allow binding to local ports |
+-| `allowLocalOutbound` | Allow outbound connections to localhost, e.g., local DBs (defaults to `allowLocalBinding` if not set) |
++| `allowLocalOutbound` | Allow outbound connections to localhost, e.g., local DBs (defaults to `allowLocalBinding` if not set; macOS only) |
++| `forwardPorts` | Host localhost ports to forward into the sandbox (Linux only; array of integers) |
+ 
+ ## Filesystem Configuration
+ 
+@@ -248,6 +249,7 @@ SSH host patterns support wildcards anywhere:
+ | Field | Description |
+ |-------|-------------|
+ | `allowPty` | Allow pseudo-terminal (PTY) allocation in the sandbox (for MacOS) |
++| `allowAudio` | Expose PulseAudio and PipeWire sockets inside the sandbox so commands can produce audio output (Linux only). Note: these sockets also allow microphone capture and, via PipeWire, camera/screen access. Disabled by default. |
+ 
+ ## Importing from Claude Code
+ 

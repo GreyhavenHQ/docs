@@ -7,19 +7,45 @@ title: Quickstart
 
 ## Installation
 
-### From Source (recommended for now)
+### Homebrew (macOS)
+
+```bash
+brew tap greyhavenhq/tap
+brew install greywall
+```
+
+This also installs [Greyproxy](../greyproxy) as a dependency.
+
+### Linux / Mac install script
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/GreyhavenHQ/greywall/main/install.sh | sh
+```
+
+The script downloads the latest release from GitHub, verifies its checksum, installs the binary to `~/.local/bin/greywall`, and then runs `greywall setup` to install and start greyproxy. Set `INSTALL_DIR` to pick a different install location, or pass a version tag (e.g. `sh -s -- v0.1.0`) to pin a specific release.
+
+### Using Go install
+
+```bash
+go install github.com/GreyhavenHQ/greywall/cmd/greywall@latest
+greywall setup
+```
+
+`go install` only places the greywall binary on your `$PATH`. Run `greywall setup` afterwards to install and start [greyproxy](/greyproxy), which greywall relies on for network filtering. Without it, the sandbox has no reachable network.
+
+### Using mise
+
+```bash
+mise use -g github:GreyhavenHQ/greywall
+mise use -g github:GreyhavenHQ/greyproxy
+```
+
+### From source
 
 ```bash
 git clone https://github.com/GreyhavenHQ/greywall
 cd greywall
-go build -o greywall ./cmd/greywall
-sudo mv greywall /usr/local/bin/
-```
-
-### Using Go Install
-
-```bash
-go install github.com/GreyhavenHQ/greywall/cmd/greywall@latest
+make setup && make build
 ```
 
 ### Linux Dependencies
@@ -28,14 +54,16 @@ On Linux, you also need:
 
 ```bash
 # Ubuntu/Debian
-sudo apt install bubblewrap socat
+sudo apt install bubblewrap socat xdg-dbus-proxy libsecret-tools
 
 # Fedora
-sudo dnf install bubblewrap socat
+sudo dnf install bubblewrap socat xdg-dbus-proxy libsecret
 
 # Arch
-sudo pacman -S bubblewrap socat
+sudo pacman -S bubblewrap socat xdg-dbus-proxy libsecret
 ```
+
+`xdg-dbus-proxy` is optional but recommended (it enables `notify-send` inside the sandbox). `libsecret-tools` provides `secret-tool`, which greywall uses to inject keyring credentials (for example a `gh` OAuth token) into the sandbox.
 
 ### Do I need sudo to run greywall?
 
@@ -149,4 +177,3 @@ greywall -p 3000 -c "npm run dev"
 - Read **[Why Greywall](./why-greywall)** to understand when greywall is a good fit (and when it isn't).
 - Learn the mental model in **[Concepts](./concepts)**.
 - Use **[Troubleshooting](./troubleshooting)** if something is blocked unexpectedly.
-- Follow workflow-specific guides in **[Recipes](./recipes/)** (npm/pip/git/CI).

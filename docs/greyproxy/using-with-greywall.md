@@ -45,7 +45,7 @@ By default, greywall routes traffic to greyproxy's SOCKS5 port at `localhost:430
 }
 ```
 
-These are greywall's defaults — no configuration needed if greyproxy is running on default ports.
+These are greywall's defaults, so no configuration is needed if greyproxy is running on default ports.
 
 ## Using a Different SOCKS5 Proxy
 
@@ -68,7 +68,7 @@ greywall --proxy socks5://localhost:1080 -- npm install
 
 ## Using Greyproxy Without Greywall
 
-Greyproxy can also be used as a standalone proxy in environments where greywall's filesystem sandboxing isn't needed — for example:
+Greyproxy can also be used as a standalone proxy in environments where greywall's filesystem sandboxing is not needed. For example:
 
 - **Containerized environments**: containers already provide process and filesystem isolation; adding greyproxy gives you network visibility and control
 - **Development environments**: use greyproxy's dashboard to monitor and understand traffic patterns
@@ -82,11 +82,23 @@ A common workflow when introducing greywall + greyproxy to a new project:
 
 1. **Start greyproxy** (`greywall setup` or `greyproxy serve`)
 2. **Run your command with monitor mode**: `greywall -m -- npm install`
-3. **Watch the dashboard** at `http://localhost:43080` — you'll see pending/blocked requests
+3. **Watch the dashboard** at `http://localhost:43080`, where pending and blocked requests appear
 4. **Approve the destinations** you want to allow in the dashboard's Pending Requests view
-5. **Run again** — approved destinations now pass through automatically
+5. **Run again**, and approved destinations now pass through automatically
 
 This iterative approach lets you build a minimal, precise allow list rather than guessing upfront.
+
+## Credential Substitution
+
+When a sandboxed process needs API keys (for example an AI coding tool running under greywall), you usually do not want the real credentials to land in the sandbox environment. Greyproxy and greywall can cooperate to hide them: greywall registers placeholder tokens with greyproxy at session creation, and greyproxy injects the real values into outgoing requests at the MITM layer. The sandboxed process only ever sees opaque placeholders.
+
+Global credentials stored in the greyproxy dashboard can be injected explicitly with `greywall --inject`:
+
+```bash
+greywall --inject ANTHROPIC_API_KEY -- opencode
+```
+
+See [Credential Substitution](./credentials) for the full flow and API.
 
 ## Check Status
 

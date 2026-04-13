@@ -5,146 +5,58 @@ title: Architecture
 
 # Architecture
 
-Greywall restricts network, filesystem, and command access for arbitrary commands. It works by:
+Greywall wraps commands with three boundaries: command blocking (deny and allow lists applied before execution), filesystem restriction, and network delegation to an external proxy. By default that proxy is [Greyproxy](/greyproxy), and every decision about which hosts or conversations are allowed lives there. Greywall itself never looks at a destination address.
 
-1. **Blocking commands** via configurable deny/allow lists before execution
-2. **Routing network traffic** through an external SOCKS5 proxy (e.g., [Greyproxy](../greyproxy)) via transparent TUN-based proxying
-3. **Sandboxing processes** using OS-native mechanisms (macOS sandbox-exec, Linux bubblewrap)
-4. **Sanitizing environment** by stripping dangerous variables (LD_PRELOAD, DYLD_INSERT_LIBRARIES, etc.)
+The command and filesystem boundaries work the same way on both platforms. The network boundary is where Linux and macOS diverge, so each platform gets its own picture below.
 
-```mermaid
-flowchart TB
-    subgraph Greywall
-        Config["Config<br/>(JSON)"]
-        Manager
-        CmdCheck["Command<br/>Blocking"]
-        EnvSanitize["Env<br/>Sanitization"]
-        Sandbox["Platform Sandbox<br/>(macOS/Linux)"]
-    end
+For the threat model and what each boundary is meant to stop, see [Security Model](./security-model). For the kernel features used to tighten the Linux sandbox, see [Linux Security Features](./linux-security-features).
 
-    subgraph External
-        Proxy["SOCKS5 Proxy<br/>(e.g. Greyproxy)"]
-        DNS["DNS Server"]
-    end
+## Linux
 
-    Config --> Manager
-    Manager --> CmdCheck
-    CmdCheck --> EnvSanitize
-    EnvSanitize --> Sandbox
-    Sandbox -->|tun2socks| Proxy
-    Sandbox -->|DNS bridge| DNS
-```
+On Linux, greywall runs the sandboxed command under `bubblewrap` with `--unshare-net`, so the sandbox has its own isolated network namespace. Nothing inside can reach the host network directly, and nothing outside can reach the sandbox except through channels greywall explicitly sets up.
 
-## Project Structure
+Outbound traffic goes through a TUN device placed inside the namespace. `tun2socks` reads every packet from that device and forwards it across a Unix-socket bridge to greyproxy's HTTP and SOCKS5 proxy on the host. The capture is transparent, so it works even for applications that ignore proxy environment variables (Node.js's built-in `http`/`https`, for example).
 
-```text
-greywall/
-├── cmd/greywall/           # CLI entry point
-│   └── main.go
-├── internal/               # Private implementation
-│   ├── config/             # Configuration loading/validation
-│   ├── platform/           # OS detection
-│   ├── proxy/              # GreyProxy detection, installation, and lifecycle
-│   └── sandbox/            # Platform-specific sandboxing
-│       ├── manager.go      # Orchestrates sandbox lifecycle
-│       ├── macos.go        # macOS sandbox-exec profiles
-│       ├── linux.go        # Linux bubblewrap + socat bridges
-│       ├── linux_seccomp.go
-│       ├── linux_landlock.go
-│       ├── linux_ebpf.go
-│       ├── command.go      # Command blocking/allow lists
-│       ├── hardening.go    # Environment sanitization
-│       └── utils.go
-└── pkg/greywall/           # Public Go API
-    └── greywall.go
-```
-
-## Core Components
-
-### Config (`internal/config/`)
-
-Handles loading and validating sandbox configuration:
-
-```go
-type Config struct {
-    Network    NetworkConfig    // Proxy URL, DNS, localhost controls
-    Filesystem FilesystemConfig // Read/write restrictions
-    Command    CommandConfig    // Command deny/allow lists
-    AllowPty   bool             // Allow pseudo-terminal allocation
-}
-```
-
-- Loads from XDG config dir or custom path
-- Falls back to restrictive defaults
-- Validates paths and normalizes them
-
-### Sandbox (`internal/sandbox/`)
-
-#### macOS Implementation
-
-Uses Apple's `sandbox-exec` with Seatbelt profiles. Network traffic is routed via proxy environment variables (`HTTP_PROXY`, `HTTPS_PROXY`, `ALL_PROXY`).
+DNS takes the same route. A DNS bridge inside the namespace forwards queries across a Unix-socket boundary to greyproxy's DNS proxy, so name resolution runs through the same filtered path as the rest of the traffic.
 
 ```mermaid
 flowchart LR
-    subgraph macOS Sandbox
-        CMD["User Command"]
-        SE["sandbox-exec -p profile"]
-        ENV["Environment Variables<br/>HTTP_PROXY, HTTPS_PROXY<br/>ALL_PROXY"]
-    end
-    CMD --> SE
-    SE --> ENV
-```
-
-#### Linux Implementation
-
-Uses `bubblewrap` (bwrap) with network namespace isolation and transparent SOCKS5 proxying:
-
-```mermaid
-flowchart TB
-    subgraph Host
-        PROXY["External SOCKS5 Proxy<br/>(:43052)"]
-        PSOCAT["socat<br/>(proxy bridge)"]
-        USOCK["Unix Sockets"]
-    end
-
-    subgraph Sandbox ["Sandbox (bwrap --unshare-net)"]
-        CMD["User Command"]
+    subgraph Sandbox["Sandbox (bwrap --unshare-net)"]
+        CMD["User command"]
         TUN["tun2socks<br/>(TUN device)"]
-        ISOCAT["socat<br/>(relay)"]
+        DNSBR["DNS bridge"]
     end
 
-    PROXY <--> PSOCAT
-    PSOCAT <--> USOCK
-    USOCK <-->|bind-mounted| ISOCAT
-    CMD -->|all traffic| TUN
-    TUN --> ISOCAT
+    subgraph Greyproxy
+        PROXY["HTTP and SOCKS5 proxy"]
+        DNSPROXY["DNS proxy"]
+    end
+
+    CMD -->|all outbound traffic| TUN
+    CMD -->|DNS queries| DNSBR
+    TUN -->|Unix socket| PROXY
+    DNSBR -->|Unix socket| DNSPROXY
 ```
 
-With `--unshare-net`, the sandbox has its own isolated network namespace. Unix sockets provide cross-namespace communication. If TUN is unavailable, greywall falls back to proxy environment variables.
+If the TUN device is unavailable (for example in a container that does not expose `/dev/net/tun`), greywall falls back to setting `HTTP_PROXY`, `HTTPS_PROXY`, and `ALL_PROXY` inside the namespace. In that mode only applications that honor those variables are routed; the rest are blocked by the namespace isolation rather than silently escaping.
 
-## Execution Flow
+## macOS
+
+On macOS there is no TUN device and no DNS bridge. The sandbox runs under `sandbox-exec` with a generated Seatbelt profile that denies every outbound network connection by default. The profile adds a single exception: connections to greyproxy's HTTP and SOCKS5 ports on `localhost`. Everything else is refused at the sandbox layer.
+
+Greywall also sets `HTTP_PROXY`, `HTTPS_PROXY`, and `ALL_PROXY` in the sandboxed process's environment so that applications which honor those variables route through greyproxy. Applications that ignore them do not silently escape, they hit the Seatbelt denial.
 
 ```mermaid
-flowchart TD
-    A["1. CLI parses arguments"] --> B["2. Load config"]
-    B --> C["3. Create Manager"]
-    C --> D["4. Manager.Initialize()"]
-    D --> E["5. Manager.WrapCommand()"]
-    E --> E0{"Check command deny/allow"}
-    E0 -->|blocked| ERR["Return error"]
-    E0 -->|allowed| F["6. Sanitize env"]
-    F --> G["7. Execute wrapped command"]
-    G --> H["8. Manager.Cleanup()"]
+flowchart LR
+    subgraph Sandbox["Sandbox (sandbox-exec profile)"]
+        CMD["User command"]
+    end
+
+    Greyproxy["Greyproxy<br/>HTTP and SOCKS5 proxy"]
+
+    CMD -->|HTTP_PROXY, HTTPS_PROXY, ALL_PROXY| Greyproxy
 ```
 
-## Platform Comparison
+Because there is no transparent capture on macOS, the network guarantee is weaker than on Linux for any application that ignores proxy environment variables. That application will not reach the network (Seatbelt still denies it), but it will also not reach greyproxy, so it simply fails to connect. This is intentional: silent bypass is worse than a hard failure.
 
-| Feature | macOS | Linux |
-|---------|-------|-------|
-| Sandbox mechanism | sandbox-exec (Seatbelt) | bubblewrap + Landlock + seccomp |
-| Network isolation | Syscall filtering | Network namespace |
-| Proxy routing | Environment variables | tun2socks + socat bridges |
-| Filesystem control | Profile rules | Bind mounts + Landlock (5.13+) |
-| Violation monitoring | log stream | eBPF |
-
-See [Linux Security Features](./linux-security-features) for details on the Linux security layer stack.
+For a side-by-side feature table covering sandboxing, network capture, DNS, credential substitution, and learning-mode tracers, see [Platform Support](./platform-support). For the kernel features that sit under the Linux sandbox, see [Linux Security Features](./linux-security-features).
