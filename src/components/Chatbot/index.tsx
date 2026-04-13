@@ -334,7 +334,7 @@ export default function Chatbot() {
                   remarkPlugins={[remarkGfm]}
                   components={{
                     table: ({node, ...props}) => {
-                      const title = i > 0 && messages[i - 1].role === 'user' ? messages[i - 1].content : 'Data Table';
+                      const title = 'Data Table';
                       return (
                         <div className={styles.tablePlaceholder}>
                           <span className={styles.tableIcon}>📋</span>
